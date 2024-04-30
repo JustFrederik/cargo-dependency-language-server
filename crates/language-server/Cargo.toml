@@ -1,0 +1,15 @@
+[package]
+name = "cargo-dependency-language-server"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.29.1", features = ["full"] }
+tower-lsp = "0.20.0"
+serde_json = "1"
+dashmap = "5.5.3"
+ropey = "1.6.1"
+toml = { workspace = true }

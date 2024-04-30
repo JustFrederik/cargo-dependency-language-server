@@ -123,21 +123,45 @@ impl LanguageServer for Backend {
             let slice = rope.slice(..).as_str().unwrap_or_default();
             if let Some(group) = find_group(&slice, offset) {
                 if group.ends_with("dependencies") {
-                    let (left, _) = get_line(slice, offset);
-                    return Some(
-                        self.data
-                            .lock()
-                            .unwrap()
-                            .search(&left)
-                            .into_iter()
-                            .map(|(name, version)| CompletionItem {
-                                label: name.clone(),
-                                detail: None,
-                                insert_text: Some(format!("{name} = \"{version}\"")),
-                                ..Default::default()
-                            })
-                            .collect(),
-                    );
+                    let (left, right) = get_line(slice, offset);
+                    let details = left.contains("=");
+                    return match details {
+                        false => Some(
+                            self.data
+                                .lock()
+                                .unwrap()
+                                .search(&left)
+                                .into_iter()
+                                .map(|(name, version)| CompletionItem {
+                                    label: name.clone(),
+                                    detail: None,
+                                    insert_text: Some(format!("{name} = \"{version}\"")),
+                                    ..Default::default()
+                                })
+                                .collect(),
+                        ),
+                        true => Some(
+                            self.details(&left, &right)
+                                .map(|(a, b)| {
+                                    a.into_iter()
+                                        .map(|value| match b {
+                                            Some(v) => CompletionItem {
+                                                label: value.clone(),
+                                                detail: None,
+                                                insert_text: Some(format!("{value}{v}")),
+                                                ..Default::default()
+                                            },
+                                            None => CompletionItem {
+                                                label: value.clone(),
+                                                detail: None,
+                                                ..Default::default()
+                                            },
+                                        })
+                                        .collect::<Vec<_>>()
+                                })
+                                .unwrap_or_default(),
+                        ),
+                    };
                 }
             }
             Some(vec![])
@@ -205,6 +229,34 @@ impl Backend {
         let rope = ropey::Rope::from_str(&params.text);
         self.document_map
             .insert(params.uri.to_string(), rope.clone());
+    }
+
+    fn details(&self, left: &str, right: &str) -> Option<(Vec<String>, Option<char>)> {
+        let (crate_name, details) = left.split_once("=").unwrap();
+        let crate_name = crate_name.trim();
+        let details = details.trim();
+        if details.starts_with("{") {
+            //TODO:
+            None
+        } else if let Some(str) = details.strip_prefix('"') {
+            let versions = self
+                .data
+                .lock()
+                .unwrap()
+                .get_versions(crate_name)?
+                .into_iter()
+                .filter(|ver| ver.starts_with(str))
+                .collect();
+            Some((
+                versions,
+                match right.starts_with('"') {
+                    true => None,
+                    false => Some('"'),
+                },
+            ))
+        } else {
+            None
+        }
     }
 }
 

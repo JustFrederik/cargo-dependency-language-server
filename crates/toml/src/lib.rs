@@ -51,10 +51,9 @@ async fn update_info(index: &mut SparseIndex, krate: &str) {
 
 impl TomlData {
     pub fn new(path: &Path) -> Arc<Mutex<Self>> {
-        git::git(path);
         let data = read_data(path);
         let sel = Arc::new(Mutex::new(Self {
-            last_checked: now(),
+            last_checked: Duration::from_micros(0),
             updating: false,
             data,
         }));

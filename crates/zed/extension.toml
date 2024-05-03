@@ -9,3 +9,4 @@ repository = "https://github.com/zed-industries/zed"
 [language_servers.cargo_dependencies]
 name = "Cargo Dependencie"
 language = "TOML"
+languages = ["TOML", "Rust"]

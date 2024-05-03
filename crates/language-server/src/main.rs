@@ -1,6 +1,7 @@
 use dashmap::DashMap;
 use ropey::Rope;
 use serde_json::Value;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use toml::TomlData;
 use tower_lsp::jsonrpc::Result as TowerResult;
@@ -18,12 +19,21 @@ use tower_lsp::{
     LanguageServer, LspService, Server,
 };
 
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    storage: PathBuf,
+}
+
 #[tokio::main]
 async fn main() {
+    let args = Args::parse();
+
     let (stdin, stdout) = (tokio::io::stdin(), tokio::io::stdout());
-    let path = std::env::current_dir()
-        .unwrap()
-        .join("crates.io-index-minfied");
+    let path = args.storage.join("crates.io-index-minfied");
 
     let (service, socket) = LspService::new(|client| Backend {
         client,

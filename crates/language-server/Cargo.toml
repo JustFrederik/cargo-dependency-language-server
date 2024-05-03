@@ -13,3 +13,4 @@ serde_json = "1"
 dashmap = "5.5.3"
 ropey = "1.6.1"
 toml = { workspace = true }
+clap = {version = "4.5.4", features = ["derive"]}

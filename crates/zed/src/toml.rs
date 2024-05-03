@@ -15,7 +15,13 @@ impl zed::Extension for CargoTomlExtension {
     ) -> Result<zed::Command> {
         Ok(zed::Command {
             command: "/Users/frederik/.cargo/bin/cargo-dependency-language-server".to_string(),
-            args: vec![],
+            args: vec![
+                "--storage".to_string(),
+                std::env::current_dir()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+            ],
             env: Default::default(),
         })
     }
